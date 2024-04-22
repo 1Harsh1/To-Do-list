@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="3.css">
+</head>
+<body>
+    <div id="todolist-heading">
+        <h1><label for="tdl">To Do List</label></h1>
+        <hr color="black">
+    </div>
+    <div id="list">
+        <ul type="none" id="task-list">
+            <!-- Existing and dynamically added tasks will be displayed here -->
+        </ul>
+    </div>
+    <input type="text" id="new-task" placeholder="Add a new task">
+    <button id="add-task">Add Task</button>
+    <button id="clear-completed">Clear Completed Tasks</button>
+    <div id="task-count">
+        Total tasks: <span id="total-tasks">0</span> |
+        Completed tasks: <span id="completed-tasks">0</span>
+    </div>
+
+    <script>
+        // Get all the required elements
+        const taskList = document.getElementById('task-list');
+        const newTaskInput = document.getElementById('new-task');
+        const addTaskButton = document.getElementById('add-task');
+        const clearCompletedButton = document.getElementById('clear-completed');
+        const totalTasksSpan = document.getElementById('total-tasks');
+        const completedTasksSpan = document.getElementById('completed-tasks');
+
+        // Function to update the task count
+        function updateTaskCount() {
+            const totalTasks = document.querySelectorAll('input[type="checkbox"]').length;
+            const completedTasks = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            totalTasksSpan.textContent = totalTasks;
+            completedTasksSpan.textContent = completedTasks;
+        }
+
+        // Add event listeners
+        addTaskButton.addEventListener('click', function() {
+            const taskText = newTaskInput.value.trim();
+            if (taskText !== '') {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="checkbox" class="tdl">
+                    <span>${taskText}</span>
+                    <button class="delete-task">x</button>
+                `;
+                taskList.appendChild(li);
+                newTaskInput.value = '';
+                updateTaskCount();
+                saveTasksToLocalStorage();
+            }
+        });
+
+        clearCompletedButton.addEventListener('click', function() {
+            const completedCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            completedCheckboxes.forEach(checkbox => {
+                checkbox.parentElement.remove();
+            });
+            updateTaskCount();
+            saveTasksToLocalStorage();
+        });
+
+        taskList.addEventListener('change', function(event) {
+            if (event.target.classList.contains('tdl')) {
+                const taskText = event.target.nextElementSibling;
+                taskText.style.textDecoration = event.target.checked ? 'line-through' : 'none';
+                updateTaskCount();
+                saveTasksToLocalStorage();
+            }
+        });
+
+        taskList.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-task')) {
+                event.target.parentElement.remove();
+                updateTaskCount();
+                saveTasksToLocalStorage();
+            }
+        });
+
+        // Function to save tasks to local storage
+        function saveTasksToLocalStorage() {
+            const tasks = [];
+            const taskElements = document.querySelectorAll('li');
+            taskElements.forEach(taskElement => {
+                const taskText = taskElement.querySelector('span').textContent;
+                const isCompleted = taskElement.querySelector('.tdl').checked;
+                tasks.push({ text: taskText, completed: isCompleted });
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Function to load tasks from local storage
+        function loadTasksFromLocalStorage() {
+            const storedTasks = localStorage.getItem('tasks');
+            if (storedTasks) {
+                const tasks = JSON.parse(storedTasks);
+                tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <input type="checkbox" class="tdl" ${task.completed ? 'checked' : ''}>
+                        <span>${task.text}</span>
+                        <button class="delete-task">Delete</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+
+                updateTaskCount();
+            }
+        }
+
+        // Load tasks from local storage on page load
+        loadTasksFromLocalStorage();
+    </script>
+</body>
+</html>
